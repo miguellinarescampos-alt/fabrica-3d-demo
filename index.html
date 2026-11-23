@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#101e29">
+    <meta name="description" content="Explora una pequeña fábrica 3D y descubre cómo se relacionan sus máquinas, componentes y fallos simulados.">
+    <title>Planta 03 — Fábrica interactiva</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23101e29'/%3E%3Cpath d='M14 46V28l12 7V23l12 7V16h12v30Z' fill='%2374dfbe'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="./style.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+        }
+      }
+    </script>
+    <script type="module" src="./app.js"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="brand" href="./" aria-label="Planta 03, inicio">
+        <span class="brand-icon" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M4 25V13l8 5v-8l8 5V5h8v20Z"/><path d="M9 22h2m6 0h2m5 0h2"/></svg></span>
+        <span>planta<span class="brand-number">03</span><small>LABORATORIO INDUSTRIAL</small></span>
+      </a>
+      <div class="header-description">Una fábrica. <span>Mucho por descubrir.</span></div>
+      <span class="demo-badge"><span class="status-dot"></span> Demo interactiva</span>
+    </header>
+
+    <main class="workspace">
+      <section class="viewer" aria-label="Explorador de la fábrica en 3D">
+        <div class="viewer-heading">
+          <p class="eyebrow">EXPLORADOR 3D <span>/ NAVE 01</span></p>
+          <h1>Entiende lo que<br>mueve la fábrica.</h1>
+          <p>Selecciona una máquina. Explora sus componentes.</p>
+        </div>
+        <div id="scene-container" class="scene-container" aria-busy="true">
+          <canvas id="factory-canvas" tabindex="0" aria-label="Fábrica 3D. Arrastra para rotar, usa la rueda para acercar y el botón derecho para desplazar. También puedes seleccionar las máquinas en el panel."></canvas>
+          <div id="machine-markers" class="machine-markers" aria-label="Máquinas de la escena"></div>
+          <div id="component-callout" class="component-callout" hidden>
+            <span class="callout-dot"></span>
+            <span><small>COMPONENTE AFECTADO</small><strong id="callout-name"></strong></span>
+          </div>
+          <div id="loading-state" class="loading-state" role="status">
+            <span class="loader"></span><strong>Preparando la fábrica…</strong><span>Cargando el explorador 3D</span>
+          </div>
+          <div id="scene-error" class="scene-error" role="alert" hidden>
+            <span class="error-symbol" aria-hidden="true">!</span>
+            <h2>No pudimos iniciar la vista 3D</h2>
+            <p id="scene-error-message"></p>
+            <button class="button button-light" id="retry-button" type="button">Volver a intentar</button>
+          </div>
+        </div>
+        <div class="scene-tools">
+          <span class="live-label"><span class="status-dot"></span> VISTA EN TIEMPO REAL</span>
+          <button id="reset-camera" class="icon-button" type="button" title="Restaurar la cámara a la vista general" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5 9v11h14V9M9 20v-7h6v7"/></svg>
+            <span>Vista general</span>
+          </button>
+        </div>
+        <div class="viewer-footer">
+          <div class="scene-selection"><span class="selection-icon" aria-hidden="true">⌖</span><span><small>SELECCIÓN ACTUAL</small><strong id="selection-status">Centro de mecanizado CNC</strong></span></div>
+          <div class="navigation-hints"><span><b>Arrastrar</b> Rotar</span><span><b>Rueda / pellizcar</b> Zoom</span><span><b>Botón derecho / 2 dedos</b> Mover</span></div>
+        </div>
+        <div class="scene-caption"><span class="legend-dot mint"></span> Máquina seleccionada <span class="legend-dot amber"></span> Componente afectado</div>
+      </section>
+
+      <aside class="inspector" aria-label="Panel de máquinas y fallos">
+        <div class="inspector-top"><span class="eyebrow">PANEL DE EXPLORACIÓN</span><span class="step-count">01 — 03</span></div>
+        <section class="machine-section" aria-labelledby="machines-title">
+          <div class="section-heading"><h2 id="machines-title"><span class="step-number">01</span> Elige una máquina</h2><span class="count-pill">3</span></div>
+          <div id="machine-list" class="machine-list"></div>
+        </section>
+
+        <section class="fault-section" aria-labelledby="faults-title">
+          <div class="section-heading"><h2 id="faults-title"><span class="step-number">02</span> Explora un fallo</h2><span class="simulation-tag">SIMULADO</span></div>
+          <p id="machine-description" class="section-description"></p>
+          <div id="fault-list" class="fault-list"></div>
+        </section>
+
+        <section class="detail-section" aria-labelledby="detail-title">
+          <div class="section-heading"><h2 id="detail-title"><span class="step-number">03</span> Localiza el componente</h2></div>
+          <div id="detail-empty" class="detail-empty">
+            <span aria-hidden="true">↖</span>
+            <p>Elige un fallo para iluminar su componente y descubrir qué revisar.</p>
+          </div>
+          <div id="fault-detail" class="fault-detail" hidden aria-live="polite">
+            <div class="detail-header"><span class="component-symbol" aria-hidden="true">⌖</span><div><small>COMPONENTE AFECTADO</small><h3 id="component-name"></h3></div></div>
+            <p id="fault-explanation"></p>
+            <div class="review-note"><strong>Qué revisar en este ejemplo</strong><p id="fault-review"></p></div>
+            <button id="clear-fault" class="text-button" type="button">Quitar resaltado <span aria-hidden="true">↗</span></button>
+          </div>
+        </section>
+        <div class="educational-note"><span aria-hidden="true">i</span><p><strong>Aprender, no diagnosticar.</strong> Los fallos son ejemplos educativos. No hay sensores conectados ni diagnóstico real.</p></div>
+      </aside>
+    </main>
+    <footer class="app-footer"><span>Hecho para explorar.</span><span>3 máquinas <span aria-hidden="true">·</span> 9 fallos de ejemplo <span aria-hidden="true">·</span> 100 % interactivo</span><span>PROTOTIPO / V.01</span></footer>
+    <p id="announcement" class="sr-only" role="status" aria-live="polite"></p>
+    <noscript><div class="noscript-message">Activa JavaScript para usar el explorador 3D.</div></noscript>
+  </body>
+</html>
